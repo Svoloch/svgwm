@@ -1,0 +1,29 @@
+
+.wm-bound {
+	stroke: #000;
+	stroke-width:3px;
+}
+.wm-left-resizer {cursor:w-resize;}
+.wm-right-resizer {cursor:e-resize;}
+.wm-top-resizer {cursor:n-resize;}
+.wm-bottom-resizer {cursor:s-resize;}
+.wm-denied-resizer {cursor:pointer;}
+.wm-background {
+	fill:#ebf;
+	fill-opacity:0.2;
+	cursor:pointer;
+}
+
+.wm-hidden {display:none;}
+.wm-window-background {fill:#8ff;fill-opacity:0.5}
+.wm-window-header {fill:#88f;fill-opacity:0.8}
+.wm-button-shadow {fill:#f00;}
+
+.wm-label-text {
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-o-user-select: none;
+	-msie-user-select: none;
+}

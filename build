@@ -1,0 +1,2 @@
+
+coffee -c --bare --join all.js xpath-tools/core.coffee xpath-tools/events.coffee xpath-tools/utils.coffee xpath-tools/off.coffee main.coffee test.coffee
