@@ -1,0 +1,3 @@
+[submodule "xpath-tools"]
+	path = xpath-tools
+	url = https://github.com/Svoloch/xpath-tools
