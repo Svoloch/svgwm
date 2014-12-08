@@ -1,17 +1,47 @@
 
+###
+SVG Widget Manager v0.0.2
+###
+#TODO: move some param from defaults to prototypes
+
 Utils =
+	times: (n, f)->
+			i = 0
+			loop
+					r = f i
+					i++
+					break if i>=n
+
+	timesA: (n, f)->
+			i = 0
+			while i < n
+					r = f i
+					i++
+					r
 	inherit: (base, data)->
 		result = 	Object.create base
 		for key,value of data
 			result[key] = value
 		result
 	generateID: do->
-		id = 0
+		ids = {}
+		$X("//*/@id").forEach (id)->
+			ids[id.value] = true
+		len = 3
+		chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+		firstChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		->
+			count = 0
 			loop
-				res = "id#{id++}"
-				break unless $ID(res).length
-			res
+				id = firstChars[Math.floor Math.random()*firstChars.length] + (Utils.timesA len, ->chars[Math.floor Math.random()*chars.length]).join ''
+				if id in ids
+					count++
+				else
+					ids[id] = true
+				return id
+				if count>len
+					count = 0
+					len++
 	createNewFilter: (place)->
 		filter = $svg "filter"
 		feMerge = $svg "feMerge"
@@ -28,7 +58,6 @@ Utils =
 		unless defs.length
 			defs = $svg 'defs'
 			svg.append defs
-			$L svg, defs
 		defs.append filter
 		filter
 EventProcessor = do->
@@ -86,33 +115,33 @@ class Base
 	destroy:->@emit 'destroy'
 
 class ResizeableRect extends Base
-	@clone: Base.clone
 	@defaults:
 		x:0
 		y:0
 		width:300
 		height:200
-		minX:NaN
-		minY:NaN
-		maxX:NaN
-		maxY:NaN
-		maxBoundX:NaN
-		maxBoundY:NaN
+		minX:-Infinity
+		minY:-Infinity
+		maxX:Infinity
+		maxY:Infinity
+		maxBoundX:Infinity
+		maxBoundY:Infinity
 		minWidth:0
 		minHeight:0
-		maxWidth:NaN
-		maxHeight:NaN
+		maxWidth:Infinity
+		maxHeight:Infinity
 		canResizeNorth:false
 		canResizeSouth:false
 		canResizeWest:false
 		canResizeEast:false
 		transform:""
+		boundClassName: 'wm-bound'
 		leftResizerClassName: 'wm-left-resizer'
 		rightResizerClassName: 'wm-right-resizer'
 		topResizerClassName: 'wm-top-resizer'
 		bottomResizerClassName: 'wm-bottom-resizer'
-		backgroundResizerClassName: 'wm-background'
-		deniedResizerClassName: 'wm-denied-resizer'
+		backgroundClassName: 'wm-background'
+		deniedClassName: 'wm-denied-resizer'
 		dragable: false
 	constructor: (config)->
 		super
@@ -126,12 +155,12 @@ class ResizeableRect extends Base
 		@place = $A []
 		@group.append @background, @body, @top, @bottom, @left, @right
 		bound = $A @top, @bottom, @left, @right
-		bound.addClass 'wm-bound'
+		bound.addClass @boundClassName
 		@right.addClass @rightResizerClassName
 		@left.addClass @leftResizerClassName
 		@top.addClass @topResizerClassName
 		@bottom.addClass @bottomResizerClassName
-		@background.addClass @backgroundResizerClassName
+		@background.addClass @backgroundClassName
 		@group.click =>@place.append @group
 		@background.mousedown downFn = (e)=>
 			return unless @dragable
@@ -217,7 +246,7 @@ class ResizeableRect extends Base
 			svg.mousemove moveFn = (e)=>
 				newHeight = @height + e.clientY - currentY
 				newHeight = unless newHeight > @maxHeight then newHeight else @maxHeight
-				newHeight = unless newHeight < @maxHeight then newHeight else @maxHeight
+				newHeight = unless newHeight < @minHeight then newHeight else @minHeight
 				newHeight = unless newHeight > @maxY - @y then newHeight else @maxY - @y
 				@setHeight newHeight
 				currentY = e.clientY
@@ -286,37 +315,37 @@ class ResizeableRect extends Base
 			height: @height
 		if @canResizeNorth
 			@top.addClass @topResizerClassName
-			@top.removeClass @backgroundResizerClassName
+			@top.removeClass @backgroundClassName
 		else
 			@top.removeClass @topResizerClassName
-			@top.addClass @backgroundResizerClassName
+			@top.addClass @backgroundClassName
 		if @canResizeSouth
 			@top.addClass @bottomResizerClassName
-			@bottom.removeClass @backgroundResizerClassName
+			@bottom.removeClass @backgroundClassName
 		else
 			@bottom.removeClass @bottomResizerClassName
-			@bottom.addClass @backgroundResizerClassName
+			@bottom.addClass @backgroundClassName
 		if @canResizeWest
 			@right.addClass @rightResizerClassName
-			@right.removeClass @backgroundResizerClassName
+			@right.removeClass @backgroundClassName
 		else
 			@right.removeClass @rightResizerClassName
-			@right.addClass @backgroundResizerClassName
+			@right.addClass @backgroundClassName
 		if @canResizeEast
 			@left.addClass @leftResizerClassName
-			@left.removeClass @backgroundResizerClassName
+			@left.removeClass @backgroundClassName
 		else
 			@left.removeClass @leftResizerClassName
-			@left.addClass @backgroundResizerClassName
+			@left.addClass @backgroundClassName
 		@emit 'redraw'
 		@
 	setResizers:(flags="")->
-		@canResizeSouth = (falgs.indexOf 's') == -1
-		@canResizeWest = (falgs.indexOf 'w') == -1
-		@canResizeEast = (falgs.indexOf 'e') == -1
-		@canResizeNorth = (falgs.indexOf 'n') == -1
+		@canResizeSouth = 's' in falgs
+		@canResizeWest = 'w' in falgs
+		@canResizeEast = 'e' in falgs
+		@canResizeNorth = 'n' in falgs
 		do @redraw
-	gerResizers:->
+	getResizers:->
 		[
 			if @canResizeSouth then 's' else ""
 			if @canResizeWest then 'w' else ""
@@ -384,21 +413,23 @@ class Window extends Widget
 			width:@width
 			height:@hederHeight
 			dragable:true
+			boundClassName: 'wm-hidden'
 			leftResizerClassName: 'wm-hidden'
 			rightResizerClassName: 'wm-hidden'
 			topResizerClassName: 'wm-hidden'
 			bottomResizerClassName: 'wm-hidden'
-			backgroundResizerClassName: 'wm-window-header'
+			backgroundClassName: 'wm-window-header'
 		@content = new Panel
 			x:0
 			y:@hederHeight
 			width:@width
 			height:@height-@hederHeight
+			boundClassName: 'wm-hidden'
 			leftResizerClassName: 'wm-hidden'
 			rightResizerClassName: 'wm-hidden'
 			topResizerClassName: 'wm-hidden'
 			bottomResizerClassName: 'wm-hidden'
-			backgroundResizerClassName: 'wm-window-background'
+			backgroundClassName: 'wm-window-background'
 		@bound.addChild @header, @content
 		@header.widgetToDrag = @bound
 		@bound.on 'redraw', =>
@@ -410,8 +441,9 @@ class Window extends Widget
 			@content.resize
 				x1:0
 				y1:@hederHeight
-				x2:@bound.width
-				y2:@bound.height
+				x2: Math.max @bound.width, 0
+				y2: Math.max @bound.height, @hederHeight
+		@header
 	renderTo:(@place)->
 		do @render
 	render: ->
@@ -490,14 +522,20 @@ class Button extends Widget
 			y:@y
 			width:@width
 			height:@height
-			backgroundResizerClassName: 'wm-button-shadow'
+			backgroundClassName: 'wm-button-shadow'
+			boundClassName: 'wm-hidden'
 		@content = new Panel
 			x:@shift
 			y:@shift
 			width:@width-@shift*2
 			height:@height-@shift*2
-			backgroundResizerClassName: 'wm-button-background'
+			backgroundClassName: 'wm-button-background'
+			boundClassName: 'wm-hidden'
 		@content.on 'click', (e)=>@emit 'click', e
+		@content.on 'mousedown', =>
+			@content.group.addClass 'wm-widget-pressed'
+		@content.on 'mouseup', =>
+			@content.group.removeClass 'wm-widget-pressed'
 		@content.renderTo @shadow.body
 	renderTo:(@place)->	
 		@place = $A @place
@@ -506,10 +544,10 @@ class Button extends Widget
 		@shadow.renderTo @place
 		@
 class Label extends Base
+	eventList = 'click dblclick mousedown mouseup mouseover mousemove mouseout'.split ' '
 	@defaults:
 		text:""
 		textClass:""
-		verticalAlign:0
 		gorizontalAlign:0
 		textStyle:{}
 		verticalAlign:0
@@ -536,6 +574,9 @@ class Label extends Base
 		@content.addClass 'wm-label-text'
 		@content.selectstart ->false
 		@body.append @content.append @text
+		eventList.forEach (eventName)=> #TODO: apply this fiature in Panel
+			@body.on eventName, (event)=>
+				@parent?.emit? eventName, event
 	render: ->
 		try do @filter.remove
 		@filter = Utils.createNewFilter @place
@@ -545,7 +586,7 @@ class Label extends Base
 		do @render
 	redraw: ->
 		@body.attr filter: null
-		bound = @body[0].getBBox()
+		bound = @content[0].getBBox()
 		posX = if @horisontalAlign>0
 			@x
 		else if @horisontalAlign<0
@@ -553,15 +594,17 @@ class Label extends Base
 		else
 			@x + (@width - bound.width)*.5
 		posY = if @verticalAlign>0
-			@y
+			@y + bound.height
 		else if @verticalAlign<0
-			@y + @height - bound.height
+			@y + @height + bound.height
 		else
-			@y + (@height - bound.height)*.5
+			@y + (@height + bound.height)*.5
 		@content.attr
 			x:posX
 			y:posY
 		try @filter.attr
+			x:@x
+			y:@y
 			width: @width
 			height: @height
 		try @body.attr
@@ -577,6 +620,24 @@ class Groupe extends Base
 	defaults:{}
 	constructor:(config)->
 		super
+class Picture extends Base
+applyConfig = do->
+	applyConfig = (conf)->
+		for typeDefaults,typeName of conf when typeName of applyConfig.types
+			for field,fieldName of typeDefaults
+				if field?
+					applyConfig.types[typeName].defaults[fieldName]=field
+				else
+					delete applyConfig.types[typeName].defaults[fieldName]
+	applyConfig.types = {
+		ResizeableRect
+		Panel
+		Window
+		Widget
+		Button
+		Label
+	}
+	applyConfig
 Forms=
 	create:(config)->
 		loop

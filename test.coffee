@@ -17,7 +17,7 @@ $R ->
 	rect.addChild rect1
 	window.rect = rect
 	window.rect1 = rect1
-	#debugger
+
 	w = new Window
 		x:50
 		y:100
@@ -25,15 +25,13 @@ $R ->
 		height:150
 	w.renderTo $ID 'render'
 	window.w = w
-	#debugger
-	bt = new Button
-		x:10
-		y:10
-		width:15
-		height:20
-	bt.renderTo w.header.body
-	window.bt = bt
 
+	window.bt = bt = new Button
+		x:5
+		y:5
+		width:15
+		height:15
+	bt.renderTo w.header.body
 
 	window.res = Forms.create
 		type:'window'
@@ -44,13 +42,15 @@ $R ->
 	window.res.renderTo $ID 'render'
 	window.l = new LayoutItem()
 	lb = window.lb = new Label
-		horisontalAlign:1
-		x:30
-		y:5
+		horisontalAlign:-1
+		verticalAlign:1
+		x:20
+		y:0
 		width:150
-		height:50
-		text:"7589!67548961"
+		height:20
+		text:"Example"
 	lb.renderTo w.header.body
+	lb.parent = w.header
 
 	return
 

@@ -1,6 +1,6 @@
 
 .wm-bound {
-	stroke: #000;
+	stroke:#000;
 	stroke-width:3px;
 }
 .wm-left-resizer {cursor:w-resize;}
@@ -17,13 +17,13 @@
 .wm-hidden {display:none;}
 .wm-window-background {fill:#8ff;fill-opacity:0.5}
 .wm-window-header {fill:#88f;fill-opacity:0.8}
-.wm-button-shadow {fill:#f00;}
+.wm-button-shadow {fill:#aac;stroke:none}
+.wm-button-content {fill:#88a;stroke:none}
+.wm-widget-pressed.wm-button-content {
+	transform: translate(2px,2px)
+}
 
 .wm-label-text {
-	-moz-user-select: none;
-	-khtml-user-select: none;
-	-webkit-user-select: none;
 	user-select: none;
-	-o-user-select: none;
-	-msie-user-select: none;
+	cursor: inherit;
 }
