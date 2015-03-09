@@ -15,15 +15,15 @@
 }
 
 .wm-hidden {display:none;}
-.wm-window-background {fill:#8ff;fill-opacity:0.5}
-.wm-window-header {fill:#88f;fill-opacity:0.8}
-.wm-button-shadow {fill:#aac;stroke:none}
-.wm-button-content {fill:#88a;stroke:none}
+.wm-window-background {fill:#8ff;fill-opacity:0.5;}
+.wm-window-header {fill:#88f;fill-opacity:0.8;}
+.wm-button-shadow {fill:#aac;stroke:none;}
+.wm-button-content {fill:#88a;stroke:none;}
 .wm-widget-pressed.wm-button-content {
-	transform: translate(2px,2px)
+	transform: translate(2px,2px);
 }
 
 .wm-label-text {
 	user-select: none;
-	cursor: inherit;
+	cursor: default;
 }

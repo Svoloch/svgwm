@@ -1,2 +1,11 @@
-
-coffee -c --bare --join all.js xpath-tools/core.coffee xpath-tools/events.coffee xpath-tools/utils.coffee xpath-tools/off.coffee main.coffee test.coffee
+cp test.css all.css
+autoprefixer all.css
+cat\
+ xpath-tools/core.coffee\
+ xpath-tools/events.coffee\
+ xpath-tools/utils.coffee\
+ xpath-tools/off.coffee\
+ xpath-tools/ajax.coffee\
+ main.coffee test.coffee\
+ > all.coffee
+coffee -c --bare all.coffee

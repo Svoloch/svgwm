@@ -4,7 +4,7 @@ SVG Widget Manager v0.0.2
 ###
 #TODO: move some param from defaults to prototypes
 
-Utils =
+Utils =#TODO use function.coffee features
 	times: (n, f)->
 			i = 0
 			loop
@@ -63,8 +63,7 @@ Utils =
 EventProcessor = do->
 	quire = []
 	processEvent = (self, event, args...)->
-		#if self?.__events__?.lists?[event]?
-		if self && self.__events__ && self.__events__.lists && self.__events__.lists[event]
+		if self?.__events__?.lists?[event]?
 			eventList = self.__events__.lists[event]
 			for callback in eventList
 				if typeof callback == 'function'
@@ -115,6 +114,8 @@ class Base
 	destroy:->@emit 'destroy'
 
 class ResizeableRect extends Base
+	getSVG = (place)->#TODO: better to move this function to enother place, to Utils for example
+		place?.xpath? '(ancestor-or-self::svg:svg)[1]'
 	@defaults:
 		x:0
 		y:0
@@ -162,32 +163,42 @@ class ResizeableRect extends Base
 		@bottom.addClass @bottomResizerClassName
 		@background.addClass @backgroundClassName
 		@group.click =>@place.append @group
-		@background.mousedown downFn = (e)=>
-			return unless @dragable
+		[currentX,currentY]=[]
+		moveFn = (e)=>
+			svg = getSVG @place
 			return unless @widgetToDrag
-			svg = @place.xpath '(ancestor-or-self::svg:svg)[1]'
+			dr = @widgetToDrag
+			newX = dr.x + e.clientX - currentX
+			newY = dr.y + e.clientY - currentY
+			newX = unless newX > dr.maxX - dr.width then newX else dr.maxX - dr.width
+			newX = unless newX < dr.minX then newX else dr.minX
+			newY = unless newY > dr.maxY - dr.height then newY else dr.maxY - dr.height
+			newY = unless newY < dr.minY then newY else dr.minY
+			dr.x = newX
+			dr.y = newY
+			do dr.redraw
 			currentX = e.clientX
 			currentY = e.clientY
-			svg.mousemove moveFn = (e)=>
-				return unless @widgetToDrag
-				dr = @widgetToDrag
-				newX = dr.x + e.clientX - currentX
-				newY = dr.y + e.clientY - currentY
-				newX = unless newX > dr.maxX - dr.width then newX else dr.maxX - dr.width
-				newX = unless newX < dr.minX then newX else dr.minX
-				newY = unless newY > dr.maxY - dr.height then newY else dr.maxY - dr.height
-				newY = unless newY < dr.minY then newY else dr.minY
-				dr.x = newX
-				dr.y = newY
-				do dr.redraw
-				currentX = e.clientX
-				currentY = e.clientY
-			svg.mouseup =>
-				svg.off 'mousemove', moveFn
+		downFn = (onUp)=> (e)=>
+			svg = getSVG @place
+			return unless @dragable
+			return unless @widgetToDrag
+			currentX = e.clientX
+			currentY = e.clientY
+			svg.mousemove moveFn
+			svg.mouseup onUp
+		if false then @background.mousedown downFn onUp = =>#TODO: test this part and remove it later
+			svg = getSVG @place
+			svg.off 'mousemove', moveFn
+			svg.off 'mouseup', onUp
+		@on 'mousedown', downFn onUp = =>
+			svg = getSVG @place
+			svg.off 'mousemove', moveFn
+			svg.off 'mouseup', onUp
 		@right.mousedown downFn = (e)=>
 			return unless e.keyCode == 0
 			return unless @canResizeWest
-			svg = @place.xpath '(ancestor-or-self::svg:svg)[1]'
+			svg = getSVG @place
 			currentX = e.clientX
 			svg.mousemove moveFn = (e)=>
 				newWidth = @width + e.clientX - currentX
@@ -201,7 +212,7 @@ class ResizeableRect extends Base
 		@left.mousedown downFn = (e)=>
 			return unless e.keyCode == 0
 			return unless @canResizeEast
-			svg = @place.xpath '(ancestor-or-self::svg:svg)[1]'
+			svg = getSVG @place
 			currentX = e.clientX
 			svg.mousemove moveFn = (e)=>
 				newX = @x + e.clientX - currentX
@@ -221,7 +232,7 @@ class ResizeableRect extends Base
 		@top.mousedown downFn = (e)=>
 			return unless e.keyCode == 0
 			return unless @canResizeSouth
-			svg = @place.xpath '(ancestor-or-self::svg:svg)[1]'
+			svg = getSVG @place
 			currentY = e.clientY
 			svg.mousemove moveFn = (e)=>
 				newY = @y + e.clientY - currentY
@@ -241,7 +252,7 @@ class ResizeableRect extends Base
 		@bottom.mousedown downFn = (e)=>
 			return unless e.keyCode == 0
 			return unless @canResizeNorth
-			svg = @place.xpath '(ancestor-or-self::svg:svg)[1]'
+			svg = getSVG @place
 			currentY = e.clientY
 			svg.mousemove moveFn = (e)=>
 				newHeight = @height + e.clientY - currentY
@@ -502,12 +513,12 @@ class Layout extends LayoutItem
 	@defaults:Utils.inherit LayoutItem.defaults,{}
 	constructor:->
 		super
-class HBox extends Layout
+class Row extends Layout
 	constructor:->
 		super
 		@items = []
-class VBox
-class GBox
+class Column
+class Grid
 class Button extends Widget
 	@defaults:
 		x:0
@@ -574,7 +585,7 @@ class Label extends Base
 		@content.addClass 'wm-label-text'
 		@content.selectstart ->false
 		@body.append @content.append @text
-		eventList.forEach (eventName)=> #TODO: apply this fiature in Panel
+		eventList.forEach (eventName)=>
 			@body.on eventName, (event)=>
 				@parent?.emit? eventName, event
 	render: ->
